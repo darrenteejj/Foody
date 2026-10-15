@@ -1,1 +1,386 @@
-<!doctype html><title>Foodie</title><p>Setting up…</p>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fbf3e2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Foody">
+<link rel="apple-touch-icon" href="mascot.jpg">
+<title>Foody</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one-screen phone app — header, swipeable row of capsule machines, bottom tab bar. */
+:root{
+  --bg:#fbf3e2; --paper:#fffaf0; --ink:#3a1d12; --muted:#86664f;
+  --machine:#d8342b; --machine-dk:#a5221b; --gold:#f2b632; --gold-ink:#3a1d12;
+  --glass:rgba(255,255,255,.55); --line:#ead9bb; --ok:#2f8f4e;
+  --shadow:0 10px 30px rgba(90,40,10,.14);
+  --display:"Baloo 2","Arial Rounded MT Bold",ui-rounded,system-ui,sans-serif;
+  --body:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1d130d; --paper:#2a1c14; --ink:#fbead2; --muted:#c3a487; --machine:#e0483d; --machine-dk:#9c241c;
+  --gold:#f5c04a; --gold-ink:#2a160a; --glass:rgba(255,240,220,.12); --line:#3d2b1f; --ok:#5cc07c;
+  --shadow:0 10px 30px rgba(0,0,0,.45); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1d130d; --paper:#2a1c14; --ink:#fbead2; --muted:#c3a487; --machine:#e0483d; --machine-dk:#9c241c;
+  --gold:#f5c04a; --gold-ink:#2a160a; --glass:rgba(255,240,220,.12); --line:#3d2b1f; --ok:#5cc07c;
+  --shadow:0 10px 30px rgba(0,0,0,.45); color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);-webkit-tap-highlight-color:transparent;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.app{height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+.view{flex:1;overflow-y:auto;overflow-x:hidden;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 24px}
+.view[hidden]{display:none}
+
+/* header */
+.top{display:flex;align-items:center;gap:12px}
+.avatar{width:52px;height:52px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);flex:none}
+.top h1{margin:0;font:800 30px/1 var(--display);color:var(--machine);letter-spacing:-.5px}
+.top p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.cdc{margin-left:auto;flex:none;background:var(--gold);color:var(--gold-ink);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:6px 9px;border-radius:999px}
+
+/* area chips */
+.chips{display:flex;gap:8px;overflow-x:auto;margin:16px calc(-1*max(16px,env(safe-area-inset-left,0px))) 0;padding:2px max(16px,env(safe-area-inset-left,0px)) 6px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1.5px solid var(--line);background:var(--paper);border-radius:999px;padding:7px 14px;font-weight:600;font-size:14px;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* machine carousel */
+.rail{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;margin:8px calc(-1*max(16px,env(safe-area-inset-left,0px))) 0;padding:8px max(16px,env(safe-area-inset-left,0px)) 4px;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.slot{flex:0 0 100%;scroll-snap-align:center;display:flex;justify-content:center}
+.machine{width:min(300px,100%);position:relative;display:flex;flex-direction:column;align-items:center}
+.sign{position:relative;z-index:3;background:var(--paper);border:5px solid var(--machine);border-radius:22px;padding:6px 18px 4px;text-align:center;box-shadow:var(--shadow);margin-bottom:-14px;min-width:70%}
+.sign b{display:block;font:800 26px/1.05 var(--display);color:var(--machine-dk)}
+.sign small{display:block;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.dome{position:relative;width:100%;aspect-ratio:1/0.92;max-width:100%;border-radius:48% 48% 14% 14%/56% 56% 10% 10%;background:radial-gradient(120% 90% at 30% 20%,rgba(255,255,255,.75),var(--glass) 40%,rgba(255,255,255,.05) 75%);border:4px solid rgba(255,255,255,.7);box-shadow:inset 0 -18px 30px rgba(0,0,0,.06),var(--shadow);overflow:hidden;z-index:1}
+.dome::after{content:"";position:absolute;left:12%;top:10%;width:18%;height:38%;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,0));transform:rotate(18deg);pointer-events:none}
+.ball{position:absolute;width:var(--s);height:var(--s);border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.92) 0 48%,var(--c) 48% 100%);box-shadow:inset -4px -6px 10px rgba(0,0,0,.12),0 2px 4px rgba(0,0,0,.12);transform:rotate(var(--r))}
+.ball::after{content:"";position:absolute;left:20%;top:12%;width:26%;height:20%;border-radius:50%;background:rgba(255,255,255,.85)}
+.dome.shake .ball{animation:jig .5s ease-in-out 2}
+@keyframes jig{0%,100%{translate:0 0}25%{translate:-4px 3px}50%{translate:4px -3px}75%{translate:-2px -4px}}
+.neck{width:94%;height:14px;background:linear-gradient(var(--line),var(--paper));border-radius:4px;z-index:2;margin-top:-6px}
+.body{width:100%;background:linear-gradient(180deg,var(--machine),var(--machine-dk));border-radius:18px 18px 22px 22px;padding:16px 16px 18px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;box-shadow:var(--shadow);position:relative}
+.knob{grid-row:1/3;width:96px;height:96px;border-radius:50%;border:none;background:radial-gradient(circle at 35% 30%,#fff,#d9d4cc 55%,#9f978c);box-shadow:inset 0 -6px 10px rgba(0,0,0,.2),0 4px 0 rgba(0,0,0,.25);display:grid;place-items:center;justify-self:center;transition:transform .9s cubic-bezier(.5,0,.25,1)}
+.knob span{width:64px;height:18px;border-radius:9px;background:linear-gradient(#e8e4dd,#b6aea2);box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.knob:active{scale:.97}
+.knob[disabled]{cursor:wait}
+.chute{width:86px;height:70px;border-radius:12px;background:#2b1610;box-shadow:inset 0 6px 12px rgba(0,0,0,.6);position:relative;overflow:hidden;border:4px solid #c9c3ba}
+.chute .ball{left:50%;bottom:-60px;margin-left:calc(var(--s)/-2);transition:bottom .55s cubic-bezier(.3,1.4,.6,1)}
+.chute.has .ball{bottom:4px}
+.hint{color:#fff4e3;font-size:12px;font-weight:600;text-align:center;opacity:.95}
+.count{position:absolute;right:14px;top:-12px;background:var(--gold);color:var(--gold-ink);border-radius:999px;padding:3px 10px;font-weight:800;font-size:12px;box-shadow:0 2px 0 rgba(0,0,0,.15)}
+.dots{display:flex;justify-content:center;gap:6px;margin-top:12px}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--machine);width:20px;border-radius:4px}
+
+/* explore card */
+.explore{margin-top:18px;width:100%;display:flex;align-items:center;gap:14px;padding:14px 14px 14px 18px;background:var(--paper);border:1.5px solid var(--line);border-radius:22px;text-align:left;box-shadow:var(--shadow)}
+.explore small{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.explore b{display:block;font:800 20px/1.15 var(--display)}
+.explore span.sub{display:block;color:var(--muted);font-size:13px}
+.go{margin-left:auto;flex:none;width:46px;height:46px;border-radius:50%;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center;font-size:22px;font-weight:800}
+
+/* lists */
+h2{font:800 24px/1.1 var(--display);margin:4px 0 12px;text-wrap:balance}
+.search{display:flex;gap:8px;margin-bottom:12px}
+.search input,.search select{min-width:0;flex:1;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:14px;padding:11px 12px;font:inherit}
+.search select{flex:0 0 auto}
+.list{display:grid;gap:10px}
+.row{display:flex;gap:12px;align-items:flex-start;background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:12px 14px}
+.row .dot{flex:none;width:14px;height:14px;border-radius:50%;margin-top:4px;background:linear-gradient(180deg,rgba(255,255,255,.95) 0 48%,var(--c) 48%)}
+.row .txt{min-width:0;flex:1}
+.row b{display:block;font-weight:700}
+.row span{display:block;color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.row a{flex:none;color:var(--machine);font-weight:700;font-size:13px;text-decoration:none;padding:4px 0}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+.empty img{width:120px;display:block;margin:0 auto 12px;border-radius:20px}
+.meta{color:var(--muted);font-size:13px;margin:-6px 0 12px}
+
+/* about */
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.fact{background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:12px}
+.fact b{display:block;font:800 24px/1 var(--display);font-variant-numeric:tabular-nums}
+.fact span{color:var(--muted);font-size:12px}
+.prose p{margin:0 0 10px;max-width:62ch}
+.prose a{color:var(--machine)}
+
+/* reveal sheet */
+.sheet{position:fixed;inset:0;z-index:20;display:grid;place-items:end center;background:rgba(30,12,4,.45);padding:16px max(16px,env(safe-area-inset-left,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px))}
+.sheet[hidden]{display:none}
+.card{width:min(420px,100%);background:var(--paper);border-radius:28px;padding:22px 20px 18px;box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative;animation:up .45s cubic-bezier(.2,1.3,.4,1)}
+@keyframes up{from{transform:translateY(40px) scale(.94);opacity:0}}
+.pop{position:absolute;left:50%;top:-44px;width:88px;height:88px;margin-left:-44px}
+.pop i{position:absolute;inset:0;border-radius:88px 88px 0 0/88px 88px 0 0;height:44px;background:rgba(255,255,255,.95);box-shadow:inset 0 -3px 6px rgba(0,0,0,.08);animation:lid .6s ease-out forwards}
+.pop i+i{top:44px;border-radius:0 0 88px 88px/0 0 88px 88px;background:var(--c);animation:base .6s ease-out forwards}
+@keyframes lid{to{transform:translate(-30px,-18px) rotate(-28deg)}}
+@keyframes base{to{transform:translate(26px,8px) rotate(18deg)}}
+.card .tag{display:inline-flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok);font-weight:700;font-size:12px;border-radius:999px;padding:4px 10px;margin-top:30px}
+.card h3{font:800 28px/1.1 var(--display);margin:10px 0 6px;text-wrap:balance}
+.card .addr{color:var(--muted);margin:0 0 4px}
+.card .cat{color:var(--muted);font-size:13px;margin:0}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.btn{border:none;border-radius:16px;padding:13px 12px;font-weight:700;text-align:center;text-decoration:none;display:block}
+.btn.primary{background:var(--gold);color:var(--gold-ink)}
+.btn.soft{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn.wide{grid-column:1/-1;background:var(--machine);color:#fff}
+.x{position:absolute;right:12px;top:10px;border:none;background:none;font-size:24px;color:var(--muted);width:40px;height:40px}
+
+/* tab bar */
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--paper);border-top:1.5px solid var(--line);padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.tab{border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:12px;font-weight:600;color:var(--muted)}
+.tab svg{width:24px;height:24px}
+.tab[aria-selected="true"]{color:var(--machine)}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-weight:600;font-size:14px;z-index:30}
+.status{margin-top:14px;text-align:center;color:var(--muted);font-size:13px}
+.status.err{color:var(--machine-dk);background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:12px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <main class="view" id="v-discover">
+    <div class="top">
+      <img class="avatar" src="mascot.jpg" alt="Foody mascot">
+      <div><h1>Foody</h1><p>Turn a knob. Eat somewhere new.</p></div>
+      <span class="cdc">CDC ready</span>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Areas"></div>
+    <div class="rail" id="rail"></div>
+    <div class="dots" id="dots"></div>
+    <p class="status" id="status">Loading CDC merchants…</p>
+    <button class="explore" id="exploreBtn">
+      <div><small>Browse all</small><b>Explore restaurants</b><span class="sub">Every café and restaurant in this area that takes CDC vouchers.</span></div>
+      <span class="go" aria-hidden="true">›</span>
+    </button>
+  </main>
+
+  <main class="view" id="v-nearby" hidden>
+    <h2>Explore restaurants</h2>
+    <div class="search">
+      <input id="q" type="search" placeholder="Search name or street" autocomplete="off">
+      <select id="areaSel" aria-label="Area"></select>
+    </div>
+    <p class="meta" id="nearbyMeta"></p>
+    <div class="list" id="nearbyList"></div>
+  </main>
+
+  <main class="view" id="v-saved" hidden>
+    <h2>Saved spots</h2>
+    <div class="list" id="savedList"></div>
+  </main>
+
+  <main class="view" id="v-more" hidden>
+    <h2>About the data</h2>
+    <div class="facts" id="facts"></div>
+    <div class="prose" id="about"></div>
+  </main>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" data-v="discover" aria-selected="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3 10.5V21h6v-6h6v6h6V10.5z"/></svg>Discover</button>
+    <button class="tab" role="tab" data-v="nearby" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.6-4.6"/></svg>Explore</button>
+    <button class="tab" role="tab" data-v="saved" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/></svg>Saved</button>
+    <button class="tab" role="tab" data-v="more" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 5h16v11H9l-5 4z" stroke-linejoin="round"/><circle cx="8.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="12" cy="10.5" r=".6" fill="currentColor"/><circle cx="15.5" cy="10.5" r=".6" fill="currentColor"/></svg>More</button>
+  </nav>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="rName">
+    <div class="pop" id="pop"><i></i><i></i></div>
+    <button class="x" id="closeSheet" aria-label="Close">×</button>
+    <span class="tag">✓ CDC vouchers accepted</span>
+    <h3 id="rName"></h3>
+    <p class="addr" id="rAddr"></p>
+    <p class="cat" id="rCat"></p>
+    <div class="actions">
+      <a class="btn primary" id="rMap" target="_blank" rel="noopener">Directions</a>
+      <button class="btn soft" id="rSave">♡ Save</button>
+      <button class="btn wide" id="rAgain">Turn again</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const COLORS=['#e8473d','#f2b632','#3c9de0','#46b06b','#ef7fb0','#f08a2c','#8a6fd8'];
+const AREA_META=[
+  {id:'tiong-bahru',name:'Tiong Bahru',note:'Heritage estate'},
+  {id:'east-coast',name:'East Coast',note:'Katong · Siglap · Marine Parade'},
+  {id:'woodlands',name:'Woodlands',note:'North'},
+  {id:'jurong',name:'Jurong',note:'Jurong East & West'},
+  {id:'changi',name:'Changi',note:'Changi Village · Loyang'}
+];
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let data=null, current=0, decks={}, picked=null, busy=false;
+let saved=store.get('foody.saved',[]);
+
+function rand(seed){let s=seed;return()=>{s=(s*9301+49297)%233280;return s/233280}}
+function key(m){return (m.name+'|'+m.postal).toLowerCase()}
+function colorFor(m){let h=0;for(const ch of m.name)h=(h*31+ch.charCodeAt(0))>>>0;return COLORS[h%COLORS.length]}
+function mapUrl(m){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(m.name+' '+(m.postal?'Singapore '+m.postal:m.address))}
+function items(id){const a=data&&data.areas.find(a=>a.id===id);return a?a.items:[]}
+function fullAddr(m){return [m.address,m.unit&&!m.address.includes(m.unit)?m.unit:'',m.postal&&!m.address.includes(m.postal)?'Singapore '+m.postal:''].filter(Boolean).join(', ')}
+function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,1600)}
+
+function buildMachines(){
+  const rail=$('#rail'), chips=$('#chips'), dots=$('#dots');
+  rail.innerHTML='';chips.innerHTML='';dots.innerHTML='';
+  AREA_META.forEach((a,i)=>{
+    const r=rand(i*7+3);let balls='';
+    for(let n=0;n<16;n++){
+      const s=46+Math.round(r()*16);
+      const row=Math.floor(n/4), col=n%4;
+      const x=3+col*22+(row%2?9:0)+r()*5, y=2+row*17+r()*4;
+      if(row===3&&(col===0||col===3))continue;
+      balls+=`<span class="ball" style="--s:${s}px;--c:${COLORS[(n+i)%COLORS.length]};--r:${Math.round(r()*80-40)}deg;left:${Math.min(x,74)}%;bottom:${y}%"></span>`;
+    }
+    const slot=document.createElement('section');slot.className='slot';slot.setAttribute('aria-label',a.name+' machine');
+    slot.innerHTML=`<div class="machine">
+      <div class="sign"><b>${a.name}</b><small>${a.note} · <span id="count-${a.id}">…</span></small></div>
+      <div class="dome" id="dome-${a.id}">${balls}</div>
+      <div class="neck"></div>
+      <div class="body">
+        <button class="knob" id="knob-${a.id}" aria-label="Turn the ${a.name} machine"><span></span></button>
+        <div class="chute" id="chute-${a.id}"><span class="ball" style="--s:52px;--c:#f2b632;--r:-12deg"></span></div>
+        <div class="hint">Turn the knob</div>
+      </div></div>`;
+    rail.appendChild(slot);
+    slot.querySelector('.knob').addEventListener('click',()=>turn(i));
+    const c=document.createElement('button');c.className='chip';c.textContent=a.name;c.setAttribute('aria-pressed',i===0);
+    c.onclick=()=>goTo(i);chips.appendChild(c);
+    dots.appendChild(document.createElement('i'));
+  });
+  rail.addEventListener('scroll',()=>{const i=Math.round(rail.scrollLeft/rail.clientWidth);if(i!==current)setCurrent(i)},{passive:true});
+  setCurrent(0);
+}
+function setCurrent(i){
+  current=Math.max(0,Math.min(AREA_META.length-1,i));
+  document.querySelectorAll('.chip').forEach((c,j)=>c.setAttribute('aria-pressed',j===current));
+  document.querySelectorAll('.dots i').forEach((d,j)=>d.classList.toggle('on',j===current));
+  const chip=document.querySelectorAll('.chip')[current];chip&&chip.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+  $('#areaSel').value=AREA_META[current].id;
+}
+function goTo(i){const rail=$('#rail');rail.scrollTo({left:i*rail.clientWidth,behavior:'smooth'});setCurrent(i)}
+
+function draw(id){
+  const list=items(id);if(!list.length)return null;
+  if(!decks[id]||!decks[id].length){decks[id]=list.map((_,i)=>i).sort(()=>Math.random()-.5)}
+  return list[decks[id].pop()];
+}
+function turn(i){
+  if(busy)return;
+  const a=AREA_META[i];
+  if(!data){toast('Still loading merchants');return}
+  if(!items(a.id).length){toast('No restaurants found in '+a.name+' yet');return}
+  busy=true;
+  const knob=$('#knob-'+a.id), dome=$('#dome-'+a.id), chute=$('#chute-'+a.id);
+  const m=draw(a.id);picked=m;
+  const c=colorFor(m);chute.querySelector('.ball').style.setProperty('--c',c);
+  chute.classList.remove('has');
+  knob.dataset.r=(+knob.dataset.r||0)+360;knob.style.transform=`rotate(${knob.dataset.r}deg)`;
+  dome.classList.add('shake');
+  setTimeout(()=>{dome.classList.remove('shake');chute.classList.add('has')},900);
+  setTimeout(()=>{reveal(m);busy=false},1650);
+}
+function reveal(m){
+  $('#pop').style.setProperty('--c',colorFor(m));
+  $('#pop').innerHTML='<i></i><i></i>';
+  $('#rName').textContent=m.name;
+  $('#rAddr').textContent=fullAddr(m);
+  $('#rCat').textContent=m.category||'';
+  $('#rCat').hidden=!m.category;
+  $('#rMap').href=mapUrl(m);
+  syncSave();
+  $('#sheet').hidden=false;$('#rAgain').focus();
+}
+function syncSave(){const on=picked&&saved.some(s=>key(s)===key(picked));$('#rSave').textContent=on?'♥ Saved':'♡ Save'}
+function toggleSave(m){
+  const k=key(m);
+  if(saved.some(s=>key(s)===k)){saved=saved.filter(s=>key(s)!==k);toast('Removed from Saved')}
+  else{saved.unshift(m);toast('Saved')}
+  store.set('foody.saved',saved);renderSaved();
+}
+function closeSheet(){$('#sheet').hidden=true;document.querySelectorAll('.chute').forEach(c=>c.classList.remove('has'))}
+
+function row(m,withSave){
+  const d=document.createElement('div');d.className='row';
+  d.innerHTML=`<span class="dot" style="--c:${colorFor(m)}"></span><div class="txt"><b></b><span></span></div><a target="_blank" rel="noopener">Map</a>`;
+  d.querySelector('b').textContent=m.name;d.querySelector('.txt span').textContent=fullAddr(m);
+  d.querySelector('a').href=mapUrl(m);
+  if(withSave){const b=document.createElement('button');b.className='btn soft';b.style.padding='4px 10px';b.textContent='Remove';b.onclick=()=>toggleSave(m);d.appendChild(b)}
+  return d;
+}
+function renderNearby(){
+  const id=$('#areaSel').value, q=$('#q').value.trim().toLowerCase();
+  const list=items(id).filter(m=>!q||(m.name+' '+m.address).toLowerCase().includes(q));
+  const el=$('#nearbyList');el.innerHTML='';
+  const name=(AREA_META.find(a=>a.id===id)||{}).name;
+  $('#nearbyMeta').textContent=data?`${list.length} of ${items(id).length} in ${name}`:'';
+  if(!data){el.innerHTML='<p class="empty">Loading CDC merchants…</p>';return}
+  if(!list.length){el.innerHTML='<p class="empty">Nothing matches that search.</p>';return}
+  list.slice(0,300).forEach(m=>el.appendChild(row(m)));
+}
+function renderSaved(){
+  const el=$('#savedList');el.innerHTML='';
+  if(!saved.length){el.innerHTML='<div class="empty"><img src="mascot.jpg" alt="">Nothing saved yet. Turn a machine and tap Save on a place you like.</div>';return}
+  saved.forEach(m=>el.appendChild(row(m,true)));
+}
+function renderAbout(){
+  const s=data&&data.stats;
+  $('#facts').innerHTML=s?[
+    [s.kept,'restaurants & cafés in Foody'],[s.foodAndDrink,'food & drink merchants islandwide'],
+    [s.removedShared+s.removedStallPlace,'stalls removed (shared address)'],[s.merchants,'CDC merchants in total']
+  ].map(([n,l])=>`<div class="fact"><b>${Number(n).toLocaleString()}</b><span>${l}</span></div>`).join(''):'';
+  const when=data?new Date(data.updated).toLocaleString('en-SG',{dateStyle:'medium',timeStyle:'short'}):'—';
+  $('#about').innerHTML=`<p>Every place in Foody comes from the live merchant list on <a href="https://www.gowhere.gov.sg/cdcvouchers" target="_blank" rel="noopener">CDC Vouchers Merchants Go Where</a>, refreshed every few hours. Last refreshed ${when}.</p>
+  <p>Foody keeps only restaurants and cafés. Any address where ${data?data.rules.sharedLimit:3} or more CDC merchants share the same postal code is treated as a hawker centre, food court or coffeeshop and removed, along with addresses named as markets, food centres or coffeeshops.</p>
+  <p>Areas are matched by postal code: Tiong Bahru 16, East Coast 42–45, Woodlands 73, Jurong 60–64, Changi 48–50.</p>
+  <p>Merchants can leave the scheme at any time, so check with the shop before paying.</p>`;
+}
+
+async function load(){
+  const st=$('#status');
+  try{
+    const r=await fetch('/api/merchants');const j=await r.json();
+    if(!r.ok||j.error)throw new Error(j.error||('HTTP '+r.status));
+    data=j;
+    AREA_META.forEach(a=>{const n=items(a.id).length;$('#count-'+a.id).textContent=n+' spots'});
+    st.hidden=true;
+  }catch(e){
+    st.className='status err';
+    st.innerHTML='Couldn’t load CDC merchants right now ('+String(e.message).replace(/</g,'&lt;')+'). <button class="btn soft" id="retry" style="display:inline-block;margin-top:8px;padding:6px 12px">Try again</button>';
+    $('#retry').onclick=()=>{st.className='status';st.textContent='Loading CDC merchants…';load()};
+  }
+  renderNearby();renderAbout();
+}
+
+function show(v){
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.v===v));
+  ['discover','nearby','saved','more'].forEach(x=>$('#v-'+x).hidden=x!==v);
+  if(v==='nearby')renderNearby();
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>show(t.dataset.v));
+$('#areaSel').innerHTML=AREA_META.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
+$('#areaSel').onchange=renderNearby;$('#q').oninput=renderNearby;
+$('#exploreBtn').onclick=()=>{$('#areaSel').value=AREA_META[current].id;show('nearby')};
+$('#closeSheet').onclick=closeSheet;
+$('#sheet').onclick=e=>{if(e.target.id==='sheet')closeSheet()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+$('#rSave').onclick=()=>{picked&&toggleSave(picked);syncSave()};
+$('#rAgain').onclick=()=>{closeSheet();setTimeout(()=>turn(current),250)};
+window.addEventListener('resize',()=>{$('#rail').scrollLeft=current*$('#rail').clientWidth});
+
+buildMachines();renderSaved();load();
+</script>
+</body>
+</html>
